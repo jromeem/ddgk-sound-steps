@@ -38,8 +38,10 @@ AudioConnection          patchCord7(mixer1, peak1);
 
 long prev1;
 int touch_readings[12] = {};
-int threshold1 = 200;
+int touch_readings2[12] = {};
+int threshold1 = 90;
 Adafruit_MPR121 cap = Adafruit_MPR121();
+Adafruit_MPR121 cap2 = Adafruit_MPR121();
 
 long prevM1 = 0;
 long prevM2 = 0;
@@ -77,6 +79,12 @@ void setup() {
     while (1);
   }
   Serial.println("MPR121 found!");
+  if (!cap2.begin(0x5B)) {
+    delay(500);
+    Serial.println("MPR121 2 not found, check wiring?");
+    while (1);
+  }
+  Serial.println("MPR121 2 found!");
 
   FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, RGB, DATA_RATE_KHZ(100)>(leds, NUM_LEDS);
   AudioMemory(75);
@@ -95,9 +103,11 @@ void loop() {
   if ((millis() - prev1) > 100 ) {
     prev1 = millis();
     int contact = 0;
+
+    // first mpr -- cap1
     for (byte i = 0; i < 12; i++) {
-      touch_readings[i] = cap.filteredData(i);
-      Serial.print(i); Serial.print(" "); Serial.print(touch_readings[i]); Serial.print("\t");
+      touch_readings[i] = cap.filteredData(i); // first cap
+      Serial.print(i); Serial.print("\t"); Serial.print(touch_readings[i]); Serial.print("\t");
       if (touch_readings[11] < threshold1) {
         digitalWrite(13, 1);
         Serial.print("!!!");
@@ -107,12 +117,33 @@ void loop() {
         envelope1.noteOn();
         env_trig = 1;
         env_timer = prevM1;
+      } else {
+        digitalWrite(13, 0);
+      }
+
+
+      if (i == 11) {
+        Serial.println();
+      }
+      
+    }
+
+    // second mpr -- cap2
+    // Serial.println();
+    for (byte i = 0; i < 12; i++) {
+      touch_readings2[i] = cap2.filteredData(i); // second cap
+      Serial.print(i+11); Serial.print("\t"); Serial.print(touch_readings2[i]); Serial.print("\t");
+      if (touch_readings2[11] < threshold1) {
+        // do something
       }
       else  {
         digitalWrite(13, 0);
       }
-    }
 
+      if (i == 11) {
+        Serial.println();
+      }
+    }
 
     // start seq4 stuff
     if (millis() - prevM4 > rate1 / 10) {
@@ -121,8 +152,8 @@ void loop() {
       mod_freq += (mod_freq * .1);
     }
   
-     sine_fm2.amplitude(mod_amp);
-     sine_fm2.frequency(mod_freq);
+    sine_fm2.amplitude(mod_amp);
+    sine_fm2.frequency(mod_freq);
   
     ///////////
   
@@ -191,11 +222,11 @@ void loop() {
         env_timer = prevM1;
       }
   
-      Serial.print("rate1 ");
-      Serial.println(rate1);
-      Serial.print("freq_out1 ");
-      Serial.println(freq_out1);
-      Serial.println();
+//      Serial.print("rate1 ");
+//      Serial.println(rate1);
+//      Serial.print("freq_out1 ");
+//      Serial.println(freq_out1);
+//      Serial.println();
     }
     Serial.println();
   }
