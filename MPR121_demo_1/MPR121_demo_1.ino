@@ -39,7 +39,7 @@ AudioConnection          patchCord7(mixer1, peak1);
 long prev1;
 int touch_readings[12] = {};
 int touch_readings2[12] = {};
-int threshold1 = 90;
+int threshold1 = 100;
 Adafruit_MPR121 cap = Adafruit_MPR121();
 Adafruit_MPR121 cap2 = Adafruit_MPR121();
 
@@ -66,6 +66,13 @@ float freq_out1;
 float freq_out2;
 int seq_tick1;
 float seq1[8] = {note_c5, note_d5, note_e5, note_f5, note_g5, note_a5, note_b5, note_c6};
+
+// sequence with 23 notes
+float seq24[23] = {note_c4, note_d4, note_e4, note_f4, note_g4, note_a4, note_b4,
+                   note_c5, note_d5, note_e5, note_f5, note_g5, note_a5, note_b5,
+                   note_c6, note_d6, note_e6, note_f6, note_g6, note_a6, note_b6,
+                   note_c7, note_d7};
+
 float mod_amp;
 float mod_freq=1;
 
@@ -108,11 +115,11 @@ void loop() {
     for (byte i = 0; i < 12; i++) {
       touch_readings[i] = cap.filteredData(i); // first cap
       Serial.print(i); Serial.print("\t"); Serial.print(touch_readings[i]); Serial.print("\t");
-      if (touch_readings[11] < threshold1) {
+      if (touch_readings[i] < threshold1) {
         digitalWrite(13, 1);
         Serial.print("!!!");
-        seq_trig = 1;
-        seq_step1 = 0;
+//        seq_trig = 1;
+//        seq_step1 = 0;
         prevM1 = millis();
         envelope1.noteOn();
         env_trig = 1;
@@ -128,6 +135,7 @@ void loop() {
       
     }
 
+    /////////////////////
     // second mpr -- cap2
     // Serial.println();
     for (byte i = 0; i < 12; i++) {
@@ -144,16 +152,17 @@ void loop() {
         Serial.println();
       }
     }
+    ///////////////////////
 
     // start seq4 stuff
     if (millis() - prevM4 > rate1 / 10) {
       prevM4 = millis();
       mod_amp += .002;
-      mod_freq += (mod_freq * .1);
+//      mod_freq += (mod_freq * .1);
     }
   
     sine_fm2.amplitude(mod_amp);
-    sine_fm2.frequency(mod_freq);
+//    sine_fm2.frequency(mod_freq);
   
     ///////////
   
@@ -221,12 +230,6 @@ void loop() {
         env_trig = 1;
         env_timer = prevM1;
       }
-  
-//      Serial.print("rate1 ");
-//      Serial.println(rate1);
-//      Serial.print("freq_out1 ");
-//      Serial.println(freq_out1);
-//      Serial.println();
     }
     Serial.println();
   }
